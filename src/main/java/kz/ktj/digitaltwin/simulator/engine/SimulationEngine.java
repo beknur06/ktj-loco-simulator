@@ -30,20 +30,23 @@ public class SimulationEngine {
     private final LocomotiveState state;
     private final double anomalyProbability;
 
-    // GPS route simulation: Astana → Almaty (roughly south)
+    // Real KTZ railway route: Астана-1 → Қарағанды → Балқаш → Алматы-2
+    // Total ~973 km by rail
     private static final double[][] ROUTE_ASTANA_ALMATY = {
-        {51.1694, 71.4491},  // Астана
-        {50.2839, 71.3785},  // Караганда (промежуточная)
-        {48.0196, 66.9237},  // Жезказган (промежуточная)
-        {43.2389, 76.9453},  // Алматы
+        {51.1956, 71.4089},  // Астана-1     (km 0)
+        {49.7870, 73.0980},  // Қарағанды    (km 190)
+        {46.8500, 74.9900},  // Балқаш-2     (km 420)
+        {43.2740, 76.9390},  // Алматы-2     (km 973)
     };
+    // Per-segment real distances (km): Astana→Karaganda, Karaganda→Balkash, Balkash→Almaty
+    private static final double[] ROUTE_ASTANA_ALMATY_SEGMENTS = {190.0, 230.0, 553.0};
 
+    // Real KTZ railway route: Астана-1 → Қарағанды (direct, ~190 km)
     private static final double[][] ROUTE_ASTANA_KARAGANDA = {
-        {51.1694, 71.4491},  // Астана
-        {50.9500, 71.4000},
-        {50.6000, 71.3500},
-        {50.2839, 71.3785},  // Караганда
+        {51.1956, 71.4089},  // Астана-1     (km 0)
+        {49.7870, 73.0980},  // Қарағанды    (km 190)
     };
+    private static final double[] ROUTE_ASTANA_KARAGANDA_SEGMENTS = {190.0};
 
     private int routeSegment = 0;
     private double segmentProgress = 0;
@@ -338,16 +341,17 @@ public class SimulationEngine {
     private void updatePosition() {
         if (state.getSpeed() < 1) return;
 
-        double[][] route = state.getRouteId().contains("ALMATY")
-            ? ROUTE_ASTANA_ALMATY : ROUTE_ASTANA_KARAGANDA;
+        boolean isAlmaty = state.getRouteId().contains("ALMATY");
+        double[][] route    = isAlmaty ? ROUTE_ASTANA_ALMATY    : ROUTE_ASTANA_KARAGANDA;
+        double[]   segments = isAlmaty ? ROUTE_ASTANA_ALMATY_SEGMENTS : ROUTE_ASTANA_KARAGANDA_SEGMENTS;
 
-        // Продвигаем позицию пропорционально скорости
+        // Продвигаем одометр пропорционально скорости (км/с)
         double kmPerTick = state.getSpeed() / 3600.0;
         state.setOdometer(state.getOdometer() + kmPerTick);
 
-        // Примерная длина сегмента маршрута ~300 км
-        double segmentKm = 300.0 / (route.length - 1);
-        segmentProgress += kmPerTick / segmentKm;
+        // Сегментный прогресс с учётом реальной длины каждого сегмента
+        double currentSegmentKm = (routeSegment < segments.length) ? segments[routeSegment] : segments[segments.length - 1];
+        segmentProgress += kmPerTick / currentSegmentKm;
 
         if (segmentProgress >= 1.0 && routeSegment < route.length - 2) {
             routeSegment++;
@@ -355,8 +359,8 @@ public class SimulationEngine {
         }
 
         int fromIdx = Math.min(routeSegment, route.length - 2);
-        int toIdx = fromIdx + 1;
-        double t = Math.min(segmentProgress, 1.0);
+        int toIdx   = fromIdx + 1;
+        double t    = Math.min(segmentProgress, 1.0);
 
         state.setGpsLat(lerp(route[fromIdx][0], route[toIdx][0], t));
         state.setGpsLon(lerp(route[fromIdx][1], route[toIdx][1], t));
