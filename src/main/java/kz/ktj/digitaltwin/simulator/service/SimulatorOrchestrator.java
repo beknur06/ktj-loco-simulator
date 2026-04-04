@@ -66,10 +66,12 @@ public class SimulatorOrchestrator {
             states.put(config.getId(), state);
 
             log.info("Registered locomotive: {} ({}) on route {}",
-                config.getId(), config.getType(), config.getRoute());
+                    config.getId(), config.getType(), config.getRoute());
         }
 
-        start();
+        // Убран автоматический вызов start() при запуске приложения
+        // start();
+        log.info("Simulator initialized. Awaiting manual start via API.");
     }
 
     /**
