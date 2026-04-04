@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SimulatorServiceApplication {
 
 	public static void main(String[] args) {
+        System.out.println("Starting Simulator Service Application...");
 		SpringApplication.run(SimulatorServiceApplication.class, args);
 	}
 
