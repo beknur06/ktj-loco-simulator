@@ -29,7 +29,7 @@ public class LocomotiveState {
     private double brakeForce = 0;         // кН (Норма 0-500)
 
     // --- Temperatures ---
-    private double coolantTemp = 75;       // °C (ТЭ33А) (Норма 70-85)
+    private double coolantTemp = 75;       // °C (ТЭ33А) (Норма 60-90)
     private double oilTemp = 75;           // °C (ТЭ33А) (Норма 65-85)
     private double exhaustTemp = 400;      // °C (ТЭ33А) (Норма 350-520)
     private double tractionMotorTemp = 90; // °C (оба) (Норма 60-120)
