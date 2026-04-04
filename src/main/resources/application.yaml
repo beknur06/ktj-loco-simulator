@@ -24,8 +24,6 @@ simulator:
     probability: 0.005
     duration-seconds: 60
 
-rabbitmq:
-  exchange:
-    telemetry: telemetry.raw
-  routing-key:
-    prefix: telemetry
+ingestion:
+  service:
+    url: ${INGESTION_URL:http://localhost:8081}
