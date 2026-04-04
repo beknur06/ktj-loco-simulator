@@ -2,7 +2,7 @@ spring:
   application:
     name: simulator-service
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
+    host: ${RABBITMQ_HOST:${{ rabbitmq.RAILWAY_PRIVATE_DOMAIN }}}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASS:guest}
@@ -26,4 +26,4 @@ simulator:
 
 ingestion:
   service:
-    url: ${INGESTION_URL:http://localhost:8081}
+    url: ${INGESTION_URL:http://${{ ingestion-service.RAILWAY_PRIVATE_DOMAIN }}:8081}
