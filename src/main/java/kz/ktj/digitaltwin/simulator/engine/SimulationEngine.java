@@ -494,7 +494,7 @@ public class SimulationEngine {
 
         // --- Fuel (ТЭ33А) ---
         if (state.getType() == LocomotiveType.TE33A) {
-            params.put("fuel_level", round(state.getFuelLevel()));
+            params.put("fuel_level", round((state.getFuelLevel() / 6000.0) * 100.0, 1));
             params.put("fuel_rate", round(addNoise(state.getFuelRate(), 2)));
             params.put("fuel_temp", round(addNoise(state.getFuelTemp(), 0.3)));
             params.put("engine_rpm", round(addNoise(state.getEngineRpm(), 3)));
