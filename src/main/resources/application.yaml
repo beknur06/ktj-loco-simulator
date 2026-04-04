@@ -2,10 +2,10 @@ spring:
   application:
     name: simulator-service
   rabbitmq:
-    host: ${RABBITMQ_HOST:${{ rabbitmq.RAILWAY_PRIVATE_DOMAIN }}}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASS:guest}
+    host: ${SPRING_RABBITMQ_HOST:${{ rabbitmq.RAILWAY_PRIVATE_DOMAIN }}}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USER:guest}
+    password: ${SPRING_RABBITMQ_PASS:guest}
 
 server:
   port: 8085
