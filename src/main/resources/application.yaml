@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: simulator-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+
+server:
+  port: 8085
+
+simulator:
+  enabled: true
+  tick-interval-ms: 1000
+  locomotives:
+    - id: KZ8A-0042
+      type: KZ8A
+      route: ASTANA-ALMATY
+    - id: TE33A-0187
+      type: TE33A
+      route: ASTANA-KARAGANDA
+  anomaly:
+    probability: 0.005
+    duration-seconds: 60
+
+rabbitmq:
+  exchange:
+    telemetry: telemetry.raw
+  routing-key:
+    prefix: telemetry
