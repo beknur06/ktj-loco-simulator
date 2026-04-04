@@ -12,7 +12,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "simulator")
 public class SimulatorProperties {
 
-    private boolean enabled = true;
+    private boolean enabled = false;
     private int tickIntervalMs = 1000;
 
     private List<LocomotiveConfig> locomotives = new ArrayList<>();
