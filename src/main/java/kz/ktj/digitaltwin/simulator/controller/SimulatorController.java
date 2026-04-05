@@ -94,6 +94,16 @@ public class SimulatorController {
     }
 
     /**
+     * POST /api/simulator/reset
+     * Сбросить все состояния локомотивов к начальным значениям.
+     */
+    @PostMapping("/reset")
+    public ResponseEntity<String> reset() {
+        orchestrator.reset();
+        return ResponseEntity.ok("Simulator reset: all locomotive states reinitialized");
+    }
+
+    /**
      * POST /api/simulator/highload
      * Быстрое включение режима высокой нагрузки (x10).
      */

@@ -43,6 +43,13 @@ public class SimulatorOrchestrator {
             log.info("Simulator is disabled");
             return;
         }
+        initEngines();
+        log.info("Simulator initialized. Awaiting manual start via API.");
+    }
+
+    private void initEngines() {
+        engines.clear();
+        states.clear();
 
         for (SimulatorProperties.LocomotiveConfig config : properties.getLocomotives()) {
             LocomotiveState state = new LocomotiveState();
@@ -58,8 +65,16 @@ public class SimulatorOrchestrator {
 
             log.info("Registered locomotive: {} ({}) on route {}", config.getId(), config.getType(), config.getRoute());
         }
+    }
 
-        log.info("Simulator initialized. Awaiting manual start via API.");
+    public void reset() {
+        boolean wasRunning = running;
+        stop();
+        initEngines();
+        if (wasRunning) {
+            start();
+        }
+        log.info("Simulator reset: all locomotive states reinitialized");
     }
 
     public void start() {
