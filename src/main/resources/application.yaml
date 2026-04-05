@@ -1,6 +1,6 @@
 spring:
   application:
-    name: simulator-service
+    name: ktj-loco-simulator
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:${{ rabbitmq.RAILWAY_PRIVATE_DOMAIN }}}
     port: ${SPRING_RABBITMQ_PORT:5672}
