@@ -25,7 +25,7 @@ simulator:
       route: ASTANA-ALMATY
       degraded: true
   anomaly:
-    probability: 0.02
+    probability: 0.003
     duration-seconds: 60
 
 ingestion:
