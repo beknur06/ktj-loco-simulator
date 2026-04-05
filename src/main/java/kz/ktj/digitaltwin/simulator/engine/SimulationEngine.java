@@ -215,10 +215,20 @@ public class SimulationEngine {
         state.setFuelRate(lerp(state.getFuelRate(), 30 + load * 320, 0.1));
         state.setFuelLevel(Math.max(0, state.getFuelLevel() - state.getFuelRate() / 3600.0));
         state.setFuelTemp(lerp(state.getFuelTemp(), state.getAmbientTemp() + 10 + load * 20, 0.01));
+
+        if (state.getPhase() == DrivingPhase.BRAKING || state.getPhase() == DrivingPhase.ACCELERATING) {
+            state.setSandLevel(Math.max(0, state.getSandLevel() - 0.003));
+        }
     }
 
     private void updateElectrics() {
         double load = state.getThrottlePosition();
+
+        if (state.getType() == LocomotiveType.KZ8A) {
+            if (state.getPhase() == DrivingPhase.BRAKING || state.getPhase() == DrivingPhase.ACCELERATING) {
+                state.setSandLevel(Math.max(0, state.getSandLevel() - 0.003));
+            }
+        }
         double maxCurrent = state.getType() == LocomotiveType.KZ8A ? 1200 : 800;
         state.setTractionMotorCurrent(lerp(state.getTractionMotorCurrent(), load * maxCurrent, 0.1));
 
@@ -265,7 +275,7 @@ public class SimulationEngine {
     private void updateAnomalies() {
         if (state.getActiveAnomaly() != AnomalyType.NONE) {
             state.setAnomalyTicksRemaining(state.getAnomalyTicksRemaining() - 1);
-            state.setAnomalyIntensity(Math.min(1.0, state.getAnomalyIntensity() + 0.02));
+            state.setAnomalyIntensity(Math.min(1.0, state.getAnomalyIntensity() + 0.05));
             applyAnomalyEffects();
 
             if (state.getAnomalyTicksRemaining() <= 0) {
@@ -308,13 +318,13 @@ public class SimulationEngine {
     private void applyAnomalyEffects() {
         double intensity = state.getAnomalyIntensity();
         switch (state.getActiveAnomaly()) {
-            case COOLANT_OVERHEAT        -> state.setCoolantTemp(state.getCoolantTemp() + intensity * 0.5);
-            case OIL_PRESSURE_DROP       -> state.setOilPressure(Math.max(0.05, state.getOilPressure() - intensity * 0.005));
-            case BRAKE_PIPE_LEAK         -> state.setBrakePipePressure(Math.max(0.2, state.getBrakePipePressure() - intensity * 0.003));
-            case TRACTION_MOTOR_OVERHEAT -> state.setTractionMotorTemp(state.getTractionMotorTemp() + intensity * 0.8);
-            case FUEL_LEAK               -> state.setFuelLevel(state.getFuelLevel() - intensity * 0.5);
-            case CATENARY_VOLTAGE_SAG    -> state.setCatenaryVoltage(25.0 - intensity * 7);
-            case EXHAUST_TEMP_SPIKE      -> state.setExhaustTemp(state.getExhaustTemp() + intensity * 2);
+            case COOLANT_OVERHEAT        -> state.setCoolantTemp(state.getCoolantTemp() + intensity * 2.0);
+            case OIL_PRESSURE_DROP       -> state.setOilPressure(Math.max(0.05, state.getOilPressure() - intensity * 0.02));
+            case BRAKE_PIPE_LEAK         -> state.setBrakePipePressure(Math.max(0.20, state.getBrakePipePressure() - intensity * 0.015));
+            case TRACTION_MOTOR_OVERHEAT -> state.setTractionMotorTemp(state.getTractionMotorTemp() + intensity * 2.5);
+            case FUEL_LEAK               -> state.setFuelLevel(Math.max(0, state.getFuelLevel() - intensity * 3.0));
+            case CATENARY_VOLTAGE_SAG    -> state.setCatenaryVoltage(25.0 - intensity * 8);
+            case EXHAUST_TEMP_SPIKE      -> state.setExhaustTemp(state.getExhaustTemp() + intensity * 6);
             default -> {}
         }
     }

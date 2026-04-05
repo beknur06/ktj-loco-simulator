@@ -21,7 +21,7 @@ simulator:
       type: TE33A
       route: ASTANA-KARAGANDA
   anomaly:
-    probability: 0.005
+    probability: 0.02
     duration-seconds: 60
 
 ingestion:
