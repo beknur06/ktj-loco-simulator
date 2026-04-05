@@ -49,21 +49,21 @@ public class SimulationEngine {
     }
 
     private void initDegradedState() {
-        state.setCoolantTemp(97);
-        state.setOilTemp(93);
-        state.setExhaustTemp(570);
-        state.setTractionMotorTemp(148);
-        state.setOilPressure(0.18);
-        state.setBrakePipePressure(0.37);
-        state.setMainReservoirPressure(0.66);
-        state.setFuelLevel(1400);
-        state.setSandLevel(18);
-        state.setBatteryVoltage(106);
-        state.setEngineRpm(430);
-        state.setBoostPressure(880);
-        state.setActiveAnomaly(AnomalyType.COOLANT_OVERHEAT);
-        state.setAnomalyTicksRemaining(9999);
-        state.setAnomalyIntensity(0.8);
+        state.setCoolantTemp(92);
+        state.setOilTemp(87);
+        state.setExhaustTemp(530);
+        state.setTractionMotorTemp(128);
+        state.setOilPressure(0.24);
+        state.setBrakePipePressure(0.43);
+        state.setMainReservoirPressure(0.71);
+        state.setFuelLevel(2800);
+        state.setSandLevel(25);
+        state.setBatteryVoltage(108);
+        state.setEngineRpm(560);
+        state.setBoostPressure(950);
+        state.setActiveAnomaly(AnomalyType.NONE);
+        state.setAnomalyTicksRemaining(0);
+        state.setAnomalyIntensity(0);
     }
 
     public TelemetryMessage tick() {
@@ -192,7 +192,7 @@ public class SimulationEngine {
 
     private void updateTemperatures() {
         double load = state.getThrottlePosition();
-        double heatOffset = degraded ? 18.0 : 0.0;
+        double heatOffset = degraded ? 7.0 : 0.0;
 
         if (state.getType() == LocomotiveType.TE33A) {
             state.setCoolantTemp(lerp(state.getCoolantTemp(), 55 + load * 30 + state.getAmbientTemp() * 0.1 + heatOffset, 0.02));
@@ -213,7 +213,7 @@ public class SimulationEngine {
 
         if (state.getType() == LocomotiveType.TE33A) {
             double oilTarget = degraded
-                ? 0.12 + (state.getEngineRpm() / 1050.0) * 0.15
+                ? 0.18 + (state.getEngineRpm() / 1050.0) * 0.18
                 : 0.25 + (state.getEngineRpm() / 1050.0) * 0.30;
             state.setOilPressure(lerp(state.getOilPressure(), oilTarget, 0.05));
 
