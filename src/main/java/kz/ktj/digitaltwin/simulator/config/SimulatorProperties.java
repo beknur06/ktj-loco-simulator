@@ -24,6 +24,7 @@ public class SimulatorProperties {
         private String id;
         private String type; // KZ8A or TE33A
         private String route;
+        private boolean degraded = false;
     }
 
     @Data

@@ -20,6 +20,10 @@ simulator:
     - id: TE33A-0187
       type: TE33A
       route: ASTANA-KARAGANDA
+    - id: TE33A-0021
+      type: TE33A
+      route: ASTANA-ALMATY
+      degraded: true
   anomaly:
     probability: 0.02
     duration-seconds: 60

@@ -18,6 +18,7 @@ public class SimulationEngine {
 
     private final LocomotiveState state;
     private final double anomalyProbability;
+    private final boolean degraded;
 
     // Real KTZ railway: Астана-1 → Қарағанды → Балқаш → Алматы-2 (~973 km)
     private static final double[][] ROUTE_ASTANA_ALMATY = {
@@ -38,9 +39,31 @@ public class SimulationEngine {
     private int routeSegment = 0;
     private double segmentProgress = 0;
 
-    public SimulationEngine(LocomotiveState state, double anomalyProbability) {
+    public SimulationEngine(LocomotiveState state, double anomalyProbability, boolean degraded) {
         this.state = state;
         this.anomalyProbability = anomalyProbability;
+        this.degraded = degraded;
+        if (degraded) {
+            initDegradedState();
+        }
+    }
+
+    private void initDegradedState() {
+        state.setCoolantTemp(97);
+        state.setOilTemp(93);
+        state.setExhaustTemp(570);
+        state.setTractionMotorTemp(148);
+        state.setOilPressure(0.18);
+        state.setBrakePipePressure(0.37);
+        state.setMainReservoirPressure(0.66);
+        state.setFuelLevel(1400);
+        state.setSandLevel(18);
+        state.setBatteryVoltage(106);
+        state.setEngineRpm(430);
+        state.setBoostPressure(880);
+        state.setActiveAnomaly(AnomalyType.COOLANT_OVERHEAT);
+        state.setAnomalyTicksRemaining(9999);
+        state.setAnomalyIntensity(0.8);
     }
 
     public TelemetryMessage tick() {
@@ -169,18 +192,19 @@ public class SimulationEngine {
 
     private void updateTemperatures() {
         double load = state.getThrottlePosition();
+        double heatOffset = degraded ? 18.0 : 0.0;
 
         if (state.getType() == LocomotiveType.TE33A) {
-            state.setCoolantTemp(lerp(state.getCoolantTemp(), 55 + load * 30 + state.getAmbientTemp() * 0.1, 0.02));
-            state.setOilTemp(lerp(state.getOilTemp(), state.getCoolantTemp() - 5 + load * 10, 0.015));
-            state.setExhaustTemp(lerp(state.getExhaustTemp(), 200 + load * 350, 0.08));
+            state.setCoolantTemp(lerp(state.getCoolantTemp(), 55 + load * 30 + state.getAmbientTemp() * 0.1 + heatOffset, 0.02));
+            state.setOilTemp(lerp(state.getOilTemp(), state.getCoolantTemp() - 5 + load * 10 + heatOffset * 0.6, 0.015));
+            state.setExhaustTemp(lerp(state.getExhaustTemp(), 200 + load * 350 + heatOffset * 5, 0.08));
         }
 
         if (state.getType() == LocomotiveType.KZ8A) {
-            state.setTransformerOilTemp(lerp(state.getTransformerOilTemp(), 35 + load * 45 + state.getAmbientTemp() * 0.15, 0.01));
+            state.setTransformerOilTemp(lerp(state.getTransformerOilTemp(), 35 + load * 45 + state.getAmbientTemp() * 0.15 + heatOffset, 0.01));
         }
 
-        state.setTractionMotorTemp(lerp(state.getTractionMotorTemp(), 45 + load * 90 + state.getAmbientTemp() * 0.2, 0.015));
+        state.setTractionMotorTemp(lerp(state.getTractionMotorTemp(), 45 + load * 90 + state.getAmbientTemp() * 0.2 + heatOffset * 1.5, 0.015));
         state.setAmbientTemp(clamp(state.getAmbientTemp() + randDouble(-0.01, 0.01), -40, 45));
     }
 
@@ -188,17 +212,28 @@ public class SimulationEngine {
         double load = state.getThrottlePosition();
 
         if (state.getType() == LocomotiveType.TE33A) {
-            state.setOilPressure(lerp(state.getOilPressure(), 0.25 + (state.getEngineRpm() / 1050.0) * 0.30, 0.05));
-            state.setBoostPressure(lerp(state.getBoostPressure(), 1013 + load * 800, 0.06));
+            double oilTarget = degraded
+                ? 0.12 + (state.getEngineRpm() / 1050.0) * 0.15
+                : 0.25 + (state.getEngineRpm() / 1050.0) * 0.30;
+            state.setOilPressure(lerp(state.getOilPressure(), oilTarget, 0.05));
+
+            double boostTarget = degraded
+                ? 820 + load * 500
+                : 1013 + load * 800;
+            state.setBoostPressure(lerp(state.getBoostPressure(), boostTarget, 0.06));
         }
 
-        double targetBrakePipe = state.getPhase() == DrivingPhase.BRAKING ? 0.38 + randDouble(0, 0.05) : 0.50;
+        double targetBrakePipe = state.getPhase() == DrivingPhase.BRAKING
+            ? (degraded ? 0.33 + randDouble(0, 0.03) : 0.38 + randDouble(0, 0.05))
+            : (degraded ? 0.43 : 0.50);
         state.setBrakePipePressure(lerp(state.getBrakePipePressure(), targetBrakePipe, 0.05));
 
         double targetBrakeCylinder = state.getPhase() == DrivingPhase.BRAKING ? 0.25 + randDouble(0, 0.1) : 0;
         state.setBrakeCylinderPressure(lerp(state.getBrakeCylinderPressure(), targetBrakeCylinder, 0.1));
 
-        double targetReservoir = state.getPhase() == DrivingPhase.BRAKING ? 0.78 : 0.85;
+        double targetReservoir = degraded
+            ? (state.getPhase() == DrivingPhase.BRAKING ? 0.65 : 0.71)
+            : (state.getPhase() == DrivingPhase.BRAKING ? 0.78 : 0.85);
         state.setMainReservoirPressure(lerp(state.getMainReservoirPressure(), targetReservoir, 0.02));
     }
 
@@ -282,6 +317,13 @@ public class SimulationEngine {
                 log.info("[{}] Anomaly {} ended", state.getLocomotiveId(), state.getActiveAnomaly());
                 state.setActiveAnomaly(AnomalyType.NONE);
                 state.setAnomalyIntensity(0);
+                if (degraded) {
+                    AnomalyType next = pickAnomaly();
+                    state.setActiveAnomaly(next);
+                    state.setAnomalyTicksRemaining(randInt(60, 180));
+                    state.setAnomalyIntensity(0.4);
+                    log.info("[{}] Degraded: auto-injected next anomaly {}", state.getLocomotiveId(), next);
+                }
             }
             return;
         }

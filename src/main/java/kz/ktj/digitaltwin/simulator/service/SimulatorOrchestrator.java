@@ -51,7 +51,8 @@ public class SimulatorOrchestrator {
             state.setRouteId(config.getRoute());
             state.setAmbientTemp(ThreadLocalRandom.current().nextDouble(-10, 30));
 
-            SimulationEngine engine = new SimulationEngine(state, properties.getAnomaly().getProbability());
+            double prob = config.isDegraded() ? 0.4 : properties.getAnomaly().getProbability();
+            SimulationEngine engine = new SimulationEngine(state, prob, config.isDegraded());
             engines.add(engine);
             states.put(config.getId(), state);
 
