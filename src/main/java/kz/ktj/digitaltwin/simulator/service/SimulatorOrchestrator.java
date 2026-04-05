@@ -16,13 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-/**
- * Оркестратор симулятора: создаёт движки для каждого локомотива
- * и тикает их с заданной частотой.
- *
- * Каждый локомотив работает в своём потоке — при x10 нагрузке
- * просто уменьшаем интервал тика.
- */
 @Service
 public class SimulatorOrchestrator {
 
@@ -51,32 +44,23 @@ public class SimulatorOrchestrator {
             return;
         }
 
-        // Создаём состояние и движок для каждого локомотива из конфигурации
         for (SimulatorProperties.LocomotiveConfig config : properties.getLocomotives()) {
             LocomotiveState state = new LocomotiveState();
             state.setLocomotiveId(config.getId());
             state.setType(LocomotiveType.valueOf(config.getType()));
             state.setRouteId(config.getRoute());
-
-            // Начальная температура зависит от сезона (для реализма)
             state.setAmbientTemp(ThreadLocalRandom.current().nextDouble(-10, 30));
 
             SimulationEngine engine = new SimulationEngine(state, properties.getAnomaly().getProbability());
             engines.add(engine);
             states.put(config.getId(), state);
 
-            log.info("Registered locomotive: {} ({}) on route {}",
-                    config.getId(), config.getType(), config.getRoute());
+            log.info("Registered locomotive: {} ({}) on route {}", config.getId(), config.getType(), config.getRoute());
         }
 
-        // Убран автоматический вызов start() при запуске приложения
-        // start();
         log.info("Simulator initialized. Awaiting manual start via API.");
     }
 
-    /**
-     * Запуск симуляции.
-     */
     public void start() {
         if (running) return;
         running = true;
@@ -97,9 +81,6 @@ public class SimulatorOrchestrator {
         log.info("Simulator started: {} locomotives, tick={}ms", engines.size(), tickIntervalMs);
     }
 
-    /**
-     * Остановка симуляции.
-     */
     @PreDestroy
     public void stop() {
         running = false;
@@ -114,29 +95,17 @@ public class SimulatorOrchestrator {
         log.info("Simulator stopped");
     }
 
-    /**
-     * Переключение интервала тика (для имитации highload).
-     * tickIntervalMs = 100 → x10 нагрузка
-     * tickIntervalMs = 1000 → нормальный режим
-     */
     public void setTickInterval(int ms) {
         this.tickIntervalMs = ms;
-        // Перезапускаем с новым интервалом
         stop();
         start();
         log.info("Tick interval changed to {}ms", ms);
     }
 
-    /**
-     * Получить текущее состояние локомотива (для REST API).
-     */
     public LocomotiveState getState(String locomotiveId) {
         return states.get(locomotiveId);
     }
 
-    /**
-     * Список всех ID локомотивов.
-     */
     public List<String> getLocomotiveIds() {
         return new ArrayList<>(states.keySet());
     }
